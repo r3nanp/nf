@@ -14,17 +14,29 @@ def get_env(key: str):
     """
     return os.getenv(key)
 
-def load_page(driver: webdriver.Chrome, url: str):
+def get_options() -> webdriver.ChromeOptions:
     """
-    Load a page in the browser.
+    Get options for the Chrome browser.
     """
-    driver.get(url)
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+
+    return options
 
 def get_driver() -> webdriver.Chrome:
     """
     Get a driver for the Chrome browser.
     """
+
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+def load_page(driver: webdriver.Chrome, url: str):
+    """
+    Load a page in the browser.
+    """
+    driver.get(url)
 
 def login(driver: webdriver.Chrome):
   """
@@ -57,7 +69,30 @@ def login(driver: webdriver.Chrome):
   submit_button = form_element.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
   submit_button.click()
 
-  sleep(10)
+def create_simple_invoice(driver: webdriver.Chrome):
+  """
+  This function is responsible for creating a simple invoice.
+  """
+  page_url = get_env("PAGE_URL")
+  load_page(driver, page_url + '/DPS/Simplificada')
+
+  # Click the last taker button
+  last_taker_element_button = WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.ID, 'btn_InscricaoCliente_historico'))
+  )
+
+  last_taker_element_button.click()
+
+
+  # Modal will open
+  modal_element = WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.ID, 'modalHistoricoPessoas'))
+  )
+
+  modal_body = modal_element.find_element(By.CSS_SELECTOR, 'div.modal-body')
+  modal_footer = modal_element.find_element(By.CSS_SELECTOR, 'div.modal-footer')
+
+
 
 def main() -> None:
   """
@@ -68,6 +103,8 @@ def main() -> None:
 
   driver = get_driver()
   login(driver)
+  sleep(5)
+  create_simple_invoice(driver)
 
 
 if __name__ == "__main__":
